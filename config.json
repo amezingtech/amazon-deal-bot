@@ -1,0 +1,32 @@
+{
+  "sources": [
+    "idoffers",
+    "lootdealsapp",
+    "Shopping_deal_offerss"
+  ],
+  "max_posts_per_run": 3,
+  "max_deal_age_hours": 6,
+  "dedup_days": 7,
+  "block_keywords": [
+    "giveaway",
+    "contest",
+    "flipkart",
+    "myntra",
+    "ajio",
+    "meesho",
+    "swiggy",
+    "zepto",
+    "blinkit",
+    "instamart"
+  ],
+  "shortlink_domains": [
+    "amzn.to",
+    "amzn.in",
+    "amzn.eu",
+    "a.co",
+    "amzn-to.co",
+    "link.amazon",
+    "pturl.in"
+  ],
+  "disclosure": "As an Amazon Associate, I earn from qualifying purchases."
+}
