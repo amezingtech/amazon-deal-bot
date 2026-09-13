@@ -153,6 +153,25 @@ def affiliate_link(asin: str) -> str:
     return f"https://www.amazon.in/dp/{asin}?tag={AMAZON_TAG}"
 
 
+def shorten_url(session: requests.Session, url: str) -> str:
+    """Shorten via TinyURL's free endpoint (Amazon's own amzn.to is
+    SiteStripe-only and can't be created by bots). Falls back to the
+    full URL, which still carries the affiliate tag."""
+    try:
+        resp = session.get(
+            "https://tinyurl.com/api-create.php",
+            params={"url": url},
+            headers=HEADERS,
+            timeout=15,
+        )
+        short = resp.text.strip()
+        if short.startswith("http"):
+            return short
+    except requests.RequestException:
+        pass
+    return url
+
+
 # --------------------------------------------------------------------------- #
 # Filtering & formatting
 # --------------------------------------------------------------------------- #
@@ -180,9 +199,11 @@ def clean_text(text: str) -> str:
     return "\n".join(lines)[:900]
 
 
-def build_caption(message: dict, asin: str) -> str:
+def build_caption(message: dict, asin: str, session: requests.Session) -> str:
     body = clean_text(message["text"])
     link = affiliate_link(asin)
+    if CONFIG.get("short_links"):
+        link = shorten_url(session, link)
     caption = (
         f"🔥 Amazon Deal 🔥\n\n"
         f"{body}\n\n"
@@ -281,7 +302,7 @@ def main() -> int:
         if posted >= CONFIG["max_posts_per_run"]:
             break
         msg, asin = cand["msg"], cand["asin"]
-        caption = build_caption(msg, asin)
+        caption = build_caption(msg, asin, session)
         log(f"Deal: {asin} (from @{msg['channel']})")
         if DRY_RUN:
             print("-" * 60)
