@@ -30,7 +30,12 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
           AMAZON_TAG: ${{ secrets.AMAZON_TAG }}
-        run: python bot.py
+        run: |
+          if [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL_ID" ] || [ -z "$AMAZON_TAG" ]; then
+            echo "::notice::Secrets not configured yet — skipping run."
+            exit 0
+          fi
+          python bot.py
 
       - name: Save posted-deals state
         run: |
