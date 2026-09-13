@@ -67,6 +67,20 @@ That's it — it now runs itself every 30 minutes.
 
 ---
 
+## 🎛️ Admin Panel (no coding needed)
+
+**URL:** https://amezingtech.github.io/amazon-deal-bot/
+
+Manage everything from your phone: add/remove source channels, set priority channels,
+change your Amazon tag, pick a link shortener (spoo.me / TinyURL / any custom API),
+set posting hours, edit block keywords, view posted-deal history, and force a bot run.
+
+**One-time login:** create a fine-grained GitHub token (Contents: read/write +
+Actions: read/write, scoped to only this repo) — full steps are inside the panel.
+The token is stored only in your browser's localStorage, never on GitHub.
+
+---
+
 ## Customize (`config.json`)
 
 | Setting              | What it does                                                              |

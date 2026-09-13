@@ -31,7 +31,7 @@ jobs:
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
           AMAZON_TAG: ${{ secrets.AMAZON_TAG }}
         run: |
-          if [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL_ID" ] || [ -z "$AMAZON_TAG" ]; then
+          if [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL_ID" ]; then
             echo "::notice::Secrets not configured yet — skipping run."
             exit 0
           fi

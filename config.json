@@ -5,11 +5,24 @@
     "Shopping_deal_offerss",
     "urindianconsumer_official"
   ],
-  "priority_sources": ["urindianconsumer_official"],
+  "priority_sources": [
+    "urindianconsumer_official"
+  ],
+  "amazon_tag": "ddfreedish0e-21",
+  "shortener": {
+    "provider": "none",
+    "api_url": "",
+    "method": "GET",
+    "api_key": "",
+    "headers": {}
+  },
   "max_posts_per_run": 5,
-  "short_links": true,
   "max_deal_age_hours": 6,
   "dedup_days": 7,
+  "active_hours": [
+    "00:00",
+    "23:59"
+  ],
   "block_keywords": [
     "giveaway",
     "contest",

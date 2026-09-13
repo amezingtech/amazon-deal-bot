@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🔥 Deal Bot Admin</title>
+<style>
+  :root {
+    --bg: #0d1117; --card: #161b22; --card2: #1c2129; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #f7931a; --accent2: #ffa940;
+    --green: #3fb950; --red: #f85149; --blue: #58a6ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; padding-bottom: 40px; }
+  header { position: sticky; top: 0; z-index: 10; background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 16px 0; }
+  header h1 { font-size: 20px; margin-bottom: 10px; }
+  header h1 span { color: var(--accent); }
+  nav { display: flex; gap: 4px; overflow-x: auto; }
+  nav button { flex: 1; white-space: nowrap; background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 10px 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  nav button.active { color: var(--accent2); border-bottom-color: var(--accent); }
+  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .card h2 { font-size: 15px; margin-bottom: 12px; color: var(--accent2); }
+  .row { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--card2); border-radius: 8px; margin-bottom: 8px; }
+  .row .name { flex: 1; word-break: break-all; font-size: 14px; }
+  .chip { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--border); color: var(--muted); }
+  .chip.on { background: #2d3a1f; color: var(--green); }
+  .btn { border: none; border-radius: 8px; padding: 12px 16px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 6px; }
+  .btn.primary { background: var(--accent); color: #161b22; }
+  .btn.secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
+  .btn.small { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; }
+  .icon-btn { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 15px; }
+  .icon-btn.danger:hover { border-color: var(--red); }
+  .icon-btn.star.on { border-color: var(--accent); background: #2d2416; }
+  input, select, textarea { width: 100%; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px 12px; font-size: 15px; margin-bottom: 12px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: -6px; margin-bottom: 12px; }
+  .hint a { color: var(--blue); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--green); border-radius: 10px; padding: 12px 18px; font-size: 14px; z-index: 100; display: none; max-width: 90%; }
+  .toast.error { border-left-color: var(--red); }
+  .stat-line { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .stat-line:last-child { border-bottom: none; }
+  .stat-line .v { color: var(--muted); text-align: right; word-break: break-all; }
+  .status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .dot-ok { background: var(--green); } .dot-fail { background: var(--red); } .dot-run { background: var(--accent); }
+  details { background: var(--card2); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+  summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--blue); }
+  details ol { margin: 10px 0 0 20px; font-size: 13px; color: var(--muted); line-height: 1.8; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .deal { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .deal:last-child { border: none; }
+  .deal a { color: var(--blue); text-decoration: none; }
+  .deal .t { color: var(--muted); font-size: 11px; }
+  #login-view { max-width: 460px; margin: 40px auto; padding: 0 16px; }
+  .lock { font-size: 44px; text-align: center; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div id="login-view">
+  <div class="lock">🔐</div>
+  <div class="card">
+    <h2>🔑 Login to Deal Bot Admin</h2>
+    <p class="muted" style="margin-bottom:14px;line-height:1.6">Paste a GitHub token (only for this repo). It is saved <b>only in this browser</b> — never uploaded anywhere.</p>
+    <input id="token-input" type="password" placeholder="github_pat_... (paste here)">
+    <button class="btn primary" onclick="login()">🔓 Unlock Admin Panel</button>
+    <details style="margin-top:14px">
+      <summary>How to create the token (1 minute, one time)</summary>
+      <ol>
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">github.com/settings/personal-access-tokens/new</a></li>
+        <li>Name: <b>dealbot-admin</b> · Expiration: whatever you like</li>
+        <li>Repository access: <b>Only select repositories</b> → choose <b>amazon-deal-bot</b></li>
+        <li>Permissions → Repository permissions:<br>• <b>Contents</b>: Read and write<br>• <b>Actions</b>: Read and write</li>
+        <li>Click <b>Generate token</b> → copy → paste above</li>
+      </ol>
+    </details>
+    <p class="muted" id="login-error" style="color:var(--red);margin-top:10px"></p>
+  </div>
+</div>
+
+<header id="app-view" style="display:none">
+  <h1>🔥 Deal Bot <span>Admin</span> <button class="icon-btn" style="float:right" onclick="logout()" title="Logout">🚪</button></h1>
+  <nav>
+    <button id="tab-btn-channels" class="active" onclick="showTab('channels')">📡 Channels</button>
+    <button id="tab-btn-settings" onclick="showTab('settings')">⚙️ Settings</button>
+    <button id="tab-btn-shortener" onclick="showTab('shortener')">🔗 Shortener</button>
+    <button id="tab-btn-status" onclick="showTab('status')">📊 Status</button>
+  </nav>
+</header>
+
+<main id="app-view" style="display:none">
+
+  <!-- CHANNELS -->
+  <section id="tab-channels">
+    <div class="card">
+      <h2>📡 Monitored Channels</h2>
+      <div id="sources-list"></div>
+      <label style="margin-top:14px">➕ Add a channel</label>
+      <div style="display:flex;gap:8px">
+        <input id="new-source" placeholder="@channelname or t.me/link" style="margin-bottom:0">
+        <button class="btn primary small" onclick="addSource()">Add</button>
+      </div>
+      <p class="hint" style="margin-top:10px">Works with any <b>public</b> channel. Test first: open <i>t.me/s/channelname</i> in a browser — if posts are visible there, the bot can read it.</p>
+      <button class="btn primary" onclick="saveConfig()">💾 Save Channels</button>
+    </div>
+    <div class="card">
+      <h2>⭐ Priority Channels</h2>
+      <p class="muted">Deals from starred channels always post first, before other channels. Tap the ⭐ next to a channel above.</p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" style="display:none">
+    <div class="card">
+      <h2>🏷️ Affiliate & Posting</h2>
+      <label>Amazon Associates tag</label>
+      <input id="f-amazon_tag" placeholder="yourtag-21">
+      <p class="hint">Just the tracking ID. It appears in every posted link.</p>
+      <div class="field-row">
+        <div><label>Max posts per run</label><input id="f-max_posts_per_run" type="number" min="1" max="15"></div>
+        <div><label>Max deal age (hours)</label><input id="f-max_deal_age_hours" type="number" min="1" max="48"></div>
+      </div>
+      <div class="field-row">
+        <div><label>No repeat for (days)</label><input id="f-dedup_days" type="number" min="1" max="60"></div>
+        <div>
+          <label>Disclosure text</label>
+          <input id="f-disclosure" placeholder="As an Amazon Associate...">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🕐 Active Posting Hours (IST)</h2>
+      <div class="field-row">
+        <div><label>From</label><input id="f-active_from" type="time"></div>
+        <div><label>To</label><input id="f-active_to" type="time"></div>
+      </div>
+      <p class="hint">Outside this window the bot stays silent. Default 00:00–23:59 = always active.</p>
+    </div>
+    <div class="card">
+      <h2>🚫 Block Keywords</h2>
+      <p class="hint">Messages containing any of these words are skipped (one per line). Used to avoid other stores, giveaways, etc.</p>
+      <textarea id="f-block_keywords" rows="6"></textarea>
+    </div>
+    <button class="btn primary" onclick="saveConfig()">💾 Save Settings</button>
+  </section>
+
+  <!-- SHORTENER -->
+  <section id="tab-shortener" style="display:none">
+    <div class="card">
+      <h2>🔗 Link Shortener</h2>
+      <label>Provider</label>
+      <select id="f-provider" onchange="renderShortenerHints()">
+        <option value="none">None — full amazon.in links (recommended)</option>
+        <option value="spoome">spoo.me — free, no key, no ads</option>
+        <option value="tinyurl">TinyURL — free but shows ads (not recommended)</option>
+        <option value="custom">Custom API — Short.io / Bitly / Dub / any</option>
+      </select>
+      <p class="hint" id="shortener-hint"></p>
+      <div id="custom-shortener" style="display:none">
+        <label>API URL (must contain <b>{url}</b> placeholder)</label>
+        <input id="f-api_url" placeholder="https://api.short.io/api/v3/links?domain=xxx&urlToShorten={url}">
+        <label>API key (optional, used as <b>{key}</b>)</label>
+        <input id="f-api_key" type="password" placeholder="sk_...">
+        <div class="field-row">
+          <div><label>Method</label><select id="f-method"><option>GET</option><option>POST</option></select></div>
+          <div><label>Extra headers (JSON)</label><input id="f-headers" placeholder='{"Authorization":"Bearer {key}"}'></div>
+        </div>
+        <p class="hint">Example for Short.io (POST):<br>URL: https://api.short.io/api/v3/links<br>Headers: {"authorization":"{key}"}<br>Body is not supported yet — prefer GET-style APIs or use spoo.me.</p>
+      </div>
+      <button class="btn primary" onclick="saveConfig()">💾 Save Shortener</button>
+    </div>
+    <div class="card">
+      <h2>ℹ️ Good to know</h2>
+      <p class="muted" style="line-height:1.7">Amazon's own <b>amzn.to</b> short links cannot be created by bots — Amazon reserves them for its SiteStripe browser toolbar. Full amazon.in links convert best and are 100% safe with Amazon's terms. Short links still contain your affiliate tag — tracking always works.</p>
+    </div>
+  </section>
+
+  <!-- STATUS -->
+  <section id="tab-status" style="display:none">
+    <div class="card">
+      <h2>▶️ Manual Run</h2>
+      <p class="hint">The bot runs automatically every 30 minutes. You can also force a run now.</p>
+      <button class="btn primary" onclick="runNow()">🚀 Run Bot Now</button>
+    </div>
+    <div class="card">
+      <h2>🕒 Recent Runs</h2>
+      <div id="runs-list"><p class="muted">Loading…</p></div>
+      <button class="btn secondary small" onclick="loadStatus()" style="margin-top:10px">🔄 Refresh</button>
+    </div>
+    <div class="card">
+      <h2>📦 Recently Posted Deals</h2>
+      <div id="deals-list"><p class="muted">Loading…</p></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const REPO = location.pathname.split("/").filter(Boolean);
+const OWNER = REPO.length >= 2 ? REPO[REPO.length - 2] : "amezingtech";
+const REPO_NAME = REPO.length >= 1 ? REPO[REPO.length - 1] : "amazon-deal-bot";
+const API = `https://api.github.com/repos/${OWNER}/${REPO_NAME}`;
+let TOKEN = localStorage.getItem("dealbot_token") || "";
+let config = null, configSha = null;
+
+const apiHeaders = () => ({
+  "Authorization": `Bearer ${TOKEN}`,
+  "Accept": "application/vnd.github+json",
+  "Content-Type": "application/json"
+});
+
+function toast(msg, isError = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast" + (isError ? " error" : "");
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 3500);
+}
+
+const b64decode = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g, "")), c => c.charCodeAt(0)));
+const b64encode = str => btoa(String.fromCharCode(...new TextEncoder().encode(str)));
+
+async function gh(path, options = {}) {
+  const resp = await fetch(API + path, { headers: apiHeaders(), ...options });
+  if (!resp.ok) {
+    let msg = `GitHub ${resp.status}`;
+    try { msg += ": " + (await resp.json()).message; } catch (e) {}
+    throw new Error(msg);
+  }
+  return resp.json();
+}
+
+async function login() {
+  TOKEN = document.getElementById("token-input").value.trim();
+  document.getElementById("login-error").textContent = "";
+  try {
+    await gh("/contents/config.json");
+    localStorage.setItem("dealbot_token", TOKEN);
+    openApp();
+  } catch (e) {
+    document.getElementById("login-error").textContent = "❌ " + e.message + " — check the token has Contents + Actions permissions for this repo.";
+  }
+}
+
+function logout() {
+  localStorage.removeItem("dealbot_token");
+  location.reload();
+}
+
+function openApp() {
+  document.getElementById("login-view").style.display = "none";
+  for (const el of document.querySelectorAll("#app-view")) el.style.display = "";
+  loadConfig().then(() => { loadStatus(); });
+}
+
+async function loadConfig() {
+  try {
+    const data = await gh("/contents/config.json");
+    configSha = data.sha;
+    config = JSON.parse(b64decode(data.content));
+  } catch (e) { toast(e.message, true); return; }
+  renderChannels();
+  renderSettings();
+  renderShortener();
+}
+
+// ---------- Channels ----------
+function renderChannels() {
+  const list = document.getElementById("sources-list");
+  const prio = config.priority_sources || [];
+  list.innerHTML = "";
+  (config.sources || []).forEach((src, i) => {
+    const row = document.createElement("div");
+    row.className = "row";
+    const isPrio = prio.includes(src);
+    row.innerHTML = `
+      <span class="name">@${src}</span>
+      <span class="chip ${isPrio ? "on" : ""}">${isPrio ? "⭐ priority" : "normal"}</span>`;
+    const star = document.createElement("button");
+    star.className = "icon-btn star" + (isPrio ? " on" : "");
+    star.textContent = "⭐";
+    star.title = "Toggle priority";
+    star.onclick = () => {
+      const p = config.priority_sources || [];
+      config.priority_sources = isPrio ? p.filter(s => s !== src) : [...p, src];
+      renderChannels();
+    };
+    const del = document.createElement("button");
+    del.className = "icon-btn danger";
+    del.textContent = "🗑";
+    del.title = "Remove";
+    del.onclick = () => {
+      config.sources.splice(i, 1);
+      config.priority_sources = (config.priority_sources || []).filter(s => s !== src);
+      renderChannels();
+    };
+    row.append(star, del);
+    list.append(row);
+  });
+  if (!config.sources || !config.sources.length) list.innerHTML = '<p class="muted">No channels yet — add one below.</p>';
+}
+
+function addSource() {
+  let val = document.getElementById("new-source").value.trim().replace(/^https?:\/\/t\.me\/(s\/)?/i, "").replace(/^@/, "").replace(/\/.*$/, "");
+  if (!val || !/^[A-Za-z0-9_]{4,64}$/.test(val)) { toast("Enter a valid channel name", true); return; }
+  if (!config.sources) config.sources = [];
+  if (config.sources.includes(val)) { toast("Already in the list", true); return; }
+  config.sources.push(val);
+  document.getElementById("new-source").value = "";
+  renderChannels();
+  toast(`@${val} added — remember to Save`, false);
+}
+
+// ---------- Settings ----------
+function renderSettings() {
+  document.getElementById("f-amazon_tag").value = config.amazon_tag || "";
+  document.getElementById("f-max_posts_per_run").value = config.max_posts_per_run ?? 5;
+  document.getElementById("f-max_deal_age_hours").value = config.max_deal_age_hours ?? 6;
+  document.getElementById("f-dedup_days").value = config.dedup_days ?? 7;
+  document.getElementById("f-disclosure").value = config.disclosure || "";
+  const ah = config.active_hours || ["00:00", "23:59"];
+  document.getElementById("f-active_from").value = ah[0];
+  document.getElementById("f-active_to").value = ah[1];
+  document.getElementById("f-block_keywords").value = (config.block_keywords || []).join("\n");
+}
+
+// ---------- Shortener ----------
+function renderShortener() {
+  const sc = config.shortener || {};
+  document.getElementById("f-provider").value = sc.provider || "none";
+  document.getElementById("f-api_url").value = sc.api_url || "";
+  document.getElementById("f-api_key").value = sc.api_key || "";
+  document.getElementById("f-method").value = sc.method || "GET";
+  document.getElementById("f-headers").value = JSON.stringify(sc.headers || {});
+  renderShortenerHints();
+}
+
+function renderShortenerHints() {
+  const p = document.getElementById("f-provider").value;
+  document.getElementById("custom-shortener").style.display = p === "custom" ? "" : "none";
+  const hints = {
+    none: "✅ Best choice — full amazon.in links. Highest trust, best conversions, 100% safe with Amazon's rules.",
+    spoome: "Free, open-source shortener. No API key needed, no ads. Link looks like spoo.me/AbC123.",
+    tinyurl: "⚠️ Free but shows an ad page before redirecting — you already noticed this. Not recommended.",
+    custom: "Plug in any shortener API that works with a simple GET request containing the {url} placeholder."
+  };
+  document.getElementById("shortener-hint").textContent = hints[p] || "";
+}
+
+// ---------- Save ----------
+async function saveConfig() {
+  config.amazon_tag = document.getElementById("f-amazon_tag").value.trim();
+  config.max_posts_per_run = parseInt(document.getElementById("f-max_posts_per_run").value) || 5;
+  config.max_deal_age_hours = parseInt(document.getElementById("f-max_deal_age_hours").value) || 6;
+  config.dedup_days = parseInt(document.getElementById("f-dedup_days").value) || 7;
+  config.disclosure = document.getElementById("f-disclosure").value.trim() || "As an Amazon Associate, I earn from qualifying purchases.";
+  config.active_hours = [
+    document.getElementById("f-active_from").value || "00:00",
+    document.getElementById("f-active_to").value || "23:59"
+  ];
+  config.block_keywords = document.getElementById("f-block_keywords").value.split("\n").map(s => s.trim().toLowerCase()).filter(Boolean);
+  const provider = document.getElementById("f-provider").value;
+  let headers = {};
+  try { headers = JSON.parse(document.getElementById("f-headers").value || "{}"); }
+  catch (e) { toast("Extra headers is not valid JSON", true); return; }
+  config.shortener = {
+    provider,
+    api_url: document.getElementById("f-api_url").value.trim(),
+    method: document.getElementById("f-method").value,
+    api_key: document.getElementById("f-api_key").value.trim(),
+    headers
+  };
+  try {
+    const data = await gh("/contents/config.json", {
+      method: "PUT",
+      body: JSON.stringify({
+        message: `admin panel: update settings (shortener=${provider})`,
+        content: b64encode(JSON.stringify(config, null, 2)),
+        sha: configSha
+      })
+    });
+    configSha = data.content.sha;
+    toast("✅ Saved! The next bot run (within 30 min) uses the new settings.");
+  } catch (e) { toast("Save failed — " + e.message, true); }
+}
+
+// ---------- Status ----------
+async function runNow() {
+  try {
+    await gh("/actions/workflows/post-deals.yml/dispatches", { method: "POST", body: JSON.stringify({ ref: "main" }) });
+    toast("🚀 Bot triggered! Deals appear in your channel in ~1 min.");
+    setTimeout(loadStatus, 5000);
+  } catch (e) { toast("Could not trigger — " + e.message, true); }
+}
+
+async function loadStatus() {
+  // recent runs
+  try {
+    const runs = (await gh("/actions/runs?per_page=5")).workflow_runs;
+    document.getElementById("runs-list").innerHTML = runs.map(r => {
+      const state = r.status === "completed"
+        ? (r.conclusion === "success" ? '<span class="status-dot dot-ok"></span>success' : '<span class="status-dot dot-fail"></span>' + r.conclusion)
+        : '<span class="status-dot dot-run"></span>running';
+      const when = new Date(r.created_at).toLocaleString();
+      return `<div class="stat-line"><span>${state}</span><span class="v">${when}</span></div>`;
+    }).join("");
+  } catch (e) {
+    document.getElementById("runs-list").innerHTML = `<p class="muted">⚠️ ${e.message}</p>`;
+  }
+  // posted deals
+  try {
+    const data = await gh("/contents/posted.json");
+    const posted = JSON.parse(b64decode(data.content));
+    const tag = config?.amazon_tag || "";
+    const rows = Object.entries(posted)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 30)
+      .map(([asin, ts]) => {
+        const d = new Date(ts * 1000).toLocaleString();
+        return `<div class="deal">🔗 <a href="https://www.amazon.in/dp/${asin}?tag=${tag}" target="_blank">${asin}</a><span class="t">  ·  ${d}</span></div>`;
+      });
+    document.getElementById("deals-list").innerHTML = rows.length ? rows.join("") : '<p class="muted">Nothing posted yet.</p>';
+  } catch (e) {
+    document.getElementById("deals-list").innerHTML = `<p class="muted">⚠️ ${e.message}</p>`;
+  }
+}
+
+// ---------- Tabs ----------
+function showTab(name) {
+  for (const t of ["channels", "settings", "shortener", "status"]) {
+    document.getElementById("tab-" + t).style.display = t === name ? "" : "none";
+    document.getElementById("tab-btn-" + t).classList.toggle("active", t === name);
+  }
+  if (name === "status") loadStatus();
+}
+
+if (TOKEN) openApp();
+</script>
+</body>
+</html>

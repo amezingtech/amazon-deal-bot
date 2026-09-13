@@ -13,9 +13,9 @@ import os
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -26,7 +26,7 @@ STATE_FILE = BASE / "posted.json"
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
 CHANNEL_ID = os.environ.get("CHANNEL_ID", "").strip()
-AMAZON_TAG = os.environ.get("AMAZON_TAG", "").strip()
+AMAZON_TAG = (CONFIG.get("amazon_tag") or os.environ.get("AMAZON_TAG") or "").strip()
 DRY_RUN = "--dry-run" in sys.argv or os.environ.get("DRY_RUN") == "1"
 
 HEADERS = {
@@ -154,22 +154,53 @@ def affiliate_link(asin: str) -> str:
 
 
 def shorten_url(session: requests.Session, url: str) -> str:
-    """Shorten via TinyURL's free endpoint (Amazon's own amzn.to is
-    SiteStripe-only and can't be created by bots). Falls back to the
-    full URL, which still carries the affiliate tag."""
+    """Shorten via the provider set in config.json. Falls back to the
+    full URL (which still carries the affiliate tag)."""
+    sc = CONFIG.get("shortener") or {}
+    provider = sc.get("provider", "none")
+    short = ""
     try:
-        resp = session.get(
-            "https://tinyurl.com/api-create.php",
-            params={"url": url},
-            headers=HEADERS,
-            timeout=15,
-        )
-        short = resp.text.strip()
-        if short.startswith("http"):
-            return short
-    except requests.RequestException:
-        pass
-    return url
+        if provider == "spoome":
+            resp = session.post(
+                "https://spoo.me/",
+                headers={"Accept": "application/json"},
+                data={"url": url},
+                timeout=15,
+            )
+            short = resp.json().get("short_url", "")
+        elif provider == "tinyurl":
+            resp = session.get(
+                "https://tinyurl.com/api-create.php",
+                params={"url": url}, headers=HEADERS, timeout=15,
+            )
+            short = resp.text.strip()
+        elif provider == "custom":
+            api = sc.get("api_url", "")
+            if "{url}" not in api:
+                return url
+            endpoint = api.replace("{url}", quote_plus(url))
+            endpoint = endpoint.replace("{key}", sc.get("api_key", ""))
+            headers = dict(HEADERS)
+            for name, value in (sc.get("headers") or {}).items():
+                headers[name] = value.replace("{key}", sc.get("api_key", ""))
+            if sc.get("method", "GET").upper() == "POST":
+                resp = session.post(endpoint, headers=headers, timeout=15)
+            else:
+                resp = session.get(endpoint, headers=headers, timeout=15)
+            try:
+                data = resp.json()
+                for key in ("short_url", "shorturl", "shortUrl", "link", "url"):
+                    if key in data:
+                        short = data[key]
+                        break
+            except ValueError:
+                short = resp.text.strip()
+    except (requests.RequestException, ValueError):
+        return url
+    short = (short or "").strip()
+    if short.startswith("http://"):
+        short = "https://" + short[len("http://"):]
+    return short if short.startswith("https://") else url
 
 
 # --------------------------------------------------------------------------- #
@@ -188,6 +219,32 @@ def is_blocked(text: str) -> bool:
     return any(kw.lower() in lowered for kw in CONFIG["block_keywords"])
 
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def within_active_hours() -> bool:
+    """True if current IST time is inside the configured posting window."""
+    window = CONFIG.get("active_hours")
+    if not window or len(window) != 2:
+        return True
+
+    def to_minutes(hhmm: str):
+        try:
+            h, m = hhmm.split(":")
+            return int(h) * 60 + int(m)
+        except ValueError:
+            return None
+
+    start, end = to_minutes(window[0]), to_minutes(window[1])
+    if start is None or end is None:
+        return True
+    now = datetime.now(IST)
+    minutes = now.hour * 60 + now.minute
+    if start <= end:
+        return start <= minutes <= end
+    return minutes >= start or minutes <= end  # window crosses midnight
+
+
 def clean_text(text: str) -> str:
     text = BARE_URL_RE.sub("", text)
     text = HANDLE_RE.sub("", text)
@@ -201,9 +258,7 @@ def clean_text(text: str) -> str:
 
 def build_caption(message: dict, asin: str, session: requests.Session) -> str:
     body = clean_text(message["text"])
-    link = affiliate_link(asin)
-    if CONFIG.get("short_links"):
-        link = shorten_url(session, link)
+    link = shorten_url(session, affiliate_link(asin))
     caption = (
         f"🔥 Amazon Deal 🔥\n\n"
         f"{body}\n\n"
@@ -264,6 +319,9 @@ def main() -> int:
         return 1
 
     state = load_state()
+    if not within_active_hours():
+        log("Outside active posting hours — skipping run.")
+        return 0
     now = time.time()
     dedup_seconds = CONFIG["dedup_days"] * 86400
     fresh_cutoff = now - dedup_seconds
