@@ -72,7 +72,9 @@ That's it — it now runs itself every 30 minutes.
 | Setting              | What it does                                                              |
 |----------------------|---------------------------------------------------------------------------|
 | `sources`            | Telegram channels to monitor. Any **public** channel works: open `t.me/s/<name>` in a browser — if messages load, you can add it. |
-| `max_posts_per_run`  | Cap per run (3 × 48 runs/day ≈ up to ~144 posts/day worst case; normally far less) |
+| `priority_sources`   | Channels whose deals always post first when there's competition for slots |
+| `short_links`        | `true` = post TinyURL short links (amzn.to can't be created by bots — Amazon keeps it SiteStripe-only). Your affiliate tag lives inside the short link either way; set `false` for full amazon.in links. |
+| `max_posts_per_run`  | Cap per run (5 × 48 runs/day; dedup keeps actual volume much lower)        |
 | `max_deal_age_hours` | Only repost deals posted within this many hours (keeps content fresh)      |
 | `dedup_days`         | Don't repost the same product (ASIN) for this many days                   |
 | `block_keywords`     | Skip messages containing these (other stores, giveaways, etc.)            |

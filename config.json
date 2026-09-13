@@ -5,6 +5,7 @@
     "Shopping_deal_offerss",
     "urindianconsumer_official"
   ],
+  "priority_sources": ["urindianconsumer_official"],
   "max_posts_per_run": 5,
   "short_links": true,
   "max_deal_age_hours": 6,

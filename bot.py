@@ -286,10 +286,13 @@ def main() -> int:
             candidates.append({"msg": msg, "asin": asin, "dup": last_posted > 0})
         time.sleep(1)
 
-    # never-posted deals first, newest first within each group
+    # never-posted first, priority channels next, newest first within each group
+    priority = set(CONFIG.get("priority_sources", []))
+
     def sort_key(cand: dict):
         ts = cand["msg"]["posted_at"]
-        return (cand["dup"], -(ts.timestamp() if ts else 0.0))
+        in_priority = 0 if cand["msg"]["channel"] in priority else 1
+        return (cand["dup"], in_priority, -(ts.timestamp() if ts else 0.0))
 
     candidates.sort(key=sort_key)
 
